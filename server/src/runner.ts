@@ -1,6 +1,7 @@
 import { spawn , exec } from "child_process";
 import _ from "underscore";
-
+import { runTypescript } from "./judge/typescript/main";
+import { execPython, SubmitPython } from "./judge/python/main";
 // export function runPython(file: string): Promise<Response> {
 //   return new Promise((resolve, reject) => {
 //     const command = "docker";
@@ -42,9 +43,9 @@ export async function gateway(language : string , file:string ,timeout: number ,
   console.log('here')
   switch (language) {
     case "python":
-      return runPython(file , timeout , id);
+      return SubmitPython(file , timeout , id ,'');
     case "typescript" :
-      return runTs(file, timeout, id);
+      return runTypescript(file, timeout, id);
     default:
       break;
   }
