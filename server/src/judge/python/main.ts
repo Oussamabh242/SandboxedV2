@@ -1,7 +1,9 @@
 import { spawn } from "child_process";
 import { readFileSync } from "fs";
+import test from "node:test";
 const  _ = require('lodash');
 import { cwd } from "process";
+import { isEqual } from "underscore";
 
 interface PyResponse {
   stdout: string;
@@ -40,14 +42,22 @@ interface SubmitResponse {
 }
 
 const testcases = JSON.parse(readFileSync('./test.json' , 'utf8')).tests;
+const idInput = new Map<number, any>();
+const idOutput = new Map<number , any>();
 
-export function execPython(file : string , timeout : number ,id :string ,  input :any ) : Promise<PyResponse | string > {
+
+testcases.forEach((e:any) => {
+  idInput.set(e.id , e.input);
+  idOutput.set(e.id , e.expected); 
+});
+
+export function runPython(file : string  ,id :string) : Promise<PyResponse | string > {
   return new Promise((resolve) => {
     const command = "docker";
     const args = [
       "run",
       '-e' ,
-      'RUN',
+      `TYPE=SUBMIT`,
       "--rm",
       "-v",
       `./user_code/${file}:/app/code.py`,
@@ -68,7 +78,11 @@ export function execPython(file : string , timeout : number ,id :string ,  input
     pyChild.on("exit", async (code) => {
       try{ 
         console.log(response); 
-        const sanitizedRespons = await  JSON.parse(response)  
+        const sanitizedRespons = await  JSON.parse(response) 
+        for(const resp of sanitizedRespons){
+          resp.input = idInput.get(resp.id) ; 
+          resp.expected= idOutput.get(resp.id); 
+        }
         resolve(sanitizedRespons)
       }
       catch (err : any){
@@ -79,13 +93,13 @@ export function execPython(file : string , timeout : number ,id :string ,  input
 
   })}
 
-export function SubmitPython(file : string , timeout : number ,id :string ,  input :any ) : Promise<PyResponse | any > {
+export function submitPython(file : string , id :string  ) : Promise<PyResponse | any > {
   return new Promise((resolve) => {
     const command = "docker";
     const args = [
       "run",
       '-e' ,
-      'RUN',
+      `TYPE=SUBMIT`,
       "--rm",
       "-v",
       `./user_code/${file}:/app/code.py`,
@@ -95,27 +109,78 @@ export function SubmitPython(file : string , timeout : number ,id :string ,  inp
       `${id}`,
       "pythonrunner", 
     ];
-    let i = 0 ;  
+    let i = 0 ; 
+    let all :any = []; 
     let response :SubmitResponse = {passed:0};
     const pyChild = spawn(command, args);
     pyChild.stdout.on('data' , (data : any)=>{
-      const res = JSON.parse(data.toString()) ;
-      if(_.isEqual(res.result , testcases[i].expected)){
-        response.passed++ ;
-
+      let res = data.toString() ;
+      res = JSON.parse(res) ;
+      for(i  ; i<res.length ; i++){
+        const thing = res[i]; 
+        console.log(thing)
+        const expected = idOutput.get(thing.id) ; 
+        if(!_.isEqual(thing.result , expected)){
+          resolve({...response ,...thing});
+        }
+        response.passed++; 
       }
-      else {
-        response = {...response , ...res , expected : testcases[i].expected , code : 1};
-        resolve(response);  
-      }
 
-      i++ ; 
-    }) ; 
+
+      //  all.push(data.toString('utf8'))
+      //let res :any ; 
+      //   res = data.toString() ;
+      //  res = res.split('\n');
+      //for(let j = 0 ; j<res.length ; j++){
+      //
+      //  let part = res[j].trim();
+      //
+      //  if(part.length==0){
+      //    continue ;
+      //  } 
+      //  part = JSON.parse(part);
+      //  console.log(part); 
+      //  const expected = idOutput.get(part.id); 
+      //  console.log(part.id , expected, part.result);
+      //  if(_.isEqual(part.result , expected)){
+      //    response.passed++ ;
+      //
+      //  }
+      //  else {
+      //
+      //    response = {...response , ...part , expected : expected , code : 1  , input : idInput.get(res.id)};
+      //
+      //    resolve(response);  
+      //  }
+      //
+      //  i++ ;
+      //}
+           
+        //all.push(res);
+    //    const expected = idOutput.get(res["id"]); 
+    //    //console.log(expected);
+    //    if(_.isEqual(res.result , expected)){
+    //      response.passed++ ;
+    //
+    //    }
+    //    else {
+    //
+    //      response = {...response , ...res , expected : expected , code : 1  , input : idInput.get(res.id)};
+    //
+    //      resolve(response);  
+    //    }
+    //
+    //    i++ ;
+    //
+    //}) ; 
     //pyChild.stderr?.on('data' , (data : any)=>{
     //  console.error(data.toString()) ; 
-    //}) ;
+    }) ;
     pyChild.on("exit", async (code) => {
-      console.log(response)
+      // console.log(all); 
+      //all.forEach(elm=> {
+      //  if(_.isEqual(elm.result , )) 
+      //});
       resolve(response)  
     }) ; 
 

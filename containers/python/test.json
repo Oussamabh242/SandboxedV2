@@ -1,13 +1,104 @@
 {
   "timeout" : 2 , 
   "tests" : [
-    {
-      "input" : [[2 , 5 , -3, 6 , 4 , 10], 14] , 
-      "expected":""
-    },
-    {
-      "input" : [[2 , 5 , -3, 6 , 4 , 10], 3] , 
-      "expected":""
-    }
-  ] 
-}
+  {
+    "id": 1,
+    "input": [12321],
+    "expected": true
+  },
+  {
+    "id": 2,
+    "input": [12345],
+    "expected": false
+  },
+  {
+    "id": 3,
+    "input": [1],
+    "expected": true
+  },
+  {
+    "id": 4,
+    "input": [1221],
+    "expected": true
+  },
+  {
+    "id": 5,
+    "input": [10],
+    "expected": false
+  },
+  {
+    "id": 6,
+    "input": [1001],
+    "expected": true
+  },
+  {
+    "id": 7,
+    "input": [123456],
+    "expected": false
+  },
+  {
+    "id": 8,
+    "input": [45654],
+    "expected": true
+  },
+  {
+    "id": 9,
+    "input": [78987],
+    "expected": true
+  },
+  {
+    "id": 10,
+    "input": [1234567],
+    "expected": false
+  },
+  {
+    "id": 11,
+    "input": [11111],
+    "expected": true
+  },
+  {
+    "id": 12,
+    "input": [12345654321],
+    "expected": true
+  },
+  {
+    "id": 13,
+    "input": [56789],
+    "expected": false
+  },
+  {
+    "id": 14,
+    "input": [444],
+    "expected":true 
+  },
+  {
+    "id": 15,
+    "input": [10001],
+    "expected": true
+  },
+  {
+    "id": 16,
+    "input": [98789],
+    "expected": true
+  },
+  {
+    "id": 17,
+    "input": [121],
+    "expected": true
+  },
+  {
+    "id": 18,
+    "input": [2112],
+    "expected": true
+  },
+  {
+    "id": 19,
+    "input": [1234321],
+    "expected": true
+  },
+  {
+    "id": 20,
+    "input": [10010],
+    "expected": false
+  }
+]}

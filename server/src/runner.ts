@@ -1,7 +1,7 @@
 import { spawn , exec } from "child_process";
 import _ from "underscore";
 import { runTypescript } from "./judge/typescript/main";
-import { execPython, SubmitPython } from "./judge/python/main";
+import { runPython, submitPython , } from "./judge/python/main";
 // export function runPython(file: string): Promise<Response> {
 //   return new Promise((resolve, reject) => {
 //     const command = "docker";
@@ -39,11 +39,10 @@ import { execPython, SubmitPython } from "./judge/python/main";
 // }
 
 
-export async function gateway(language : string , file:string ,timeout: number , id : string ){
-  console.log('here')
+export async function submitGateway(language : string , file:string ,timeout: number , id : string ){
   switch (language) {
     case "python":
-      return SubmitPython(file , timeout , id ,'');
+      return submitPython(file  ,id );
     case "typescript" :
       return runTypescript(file, timeout, id);
     default:
@@ -51,52 +50,67 @@ export async function gateway(language : string , file:string ,timeout: number ,
   }
 }
 
-export function runPython(file: string , timeout : number , id:string){
-  console.log(file , timeout , id); 
-  console.log(timeout);
-  return new Promise((resolve, reject) => {
-    const command = "docker";
-    const args = [
-      "run",
-      "--rm",
-      "-v",
-      `./user_code/${file}:/app/code.py`,
-      `--name`,
-      `${id}`,
-      "snadpy", 
-    ];
 
-    let output = { stdout: "", stderr: "" };
 
-    const run = spawn(command, args);
-
-    run.stdout.on("data", (data) => {
-      output.stdout += data;
-    });
-    run.stderr.on("data", (data) => {
-      output.stderr += data;
-    });
-    let timeoutCheck = setTimeout(() => {
-    const stopCommand = `docker stop ${id}`;
-      output = _.extend(output, {
-        timedOut: true,
-        isError: true,
-        killedByContainer: true,
-      });
-      exec(stopCommand, (err, stdout, stderr) => {
-        
-        resolve(trim(output));
-      });
-      resolve(trim(output));
-    }, timeout);
-    run.on("close", (exitCode) => {
-      clearTimeout(timeoutCheck);
-      output = _.extend(output, { isError: exitCode !== 0 });
-      resolve(trim(output));
-    });
-  });
+export async function runGateway(language : string , file:string ,timeout: number , id : string ){
+  switch (language) {
+    case "python":
+      return runPython(file  , id );
+    case "typescript" :
+      return runTypescript(file, timeout, id);
+    default:
+      break;
+  }
 }
 
+
+
+//export function runPython(file: string , timeout : number , id:string){
+//  console.log(file , timeout , id); 
+//  console.log(timeout);
+//  return new Promise((resolve, reject) => {
+//    const command = "docker";
+//    const args = [
+//      "run",
+//      "--rm",
+//      "-v",
+//      `./user_code/${file}:/app/code.py`,
+//      `--name`,
+//      `${id}`,
+//      "snadpy", 
+//    ];
+//
+//    let output = { stdout: "", stderr: "" };
+//
+//    const run = spawn(command, args);
+//
+//    run.stdout.on("data", (data) => {
+//      output.stdout += data;
+//    });
+//    run.stderr.on("data", (data) => {
+//      output.stderr += data;
+//    });
+//    let timeoutCheck = setTimeout(() => {
+//    const stopCommand = `docker stop ${id}`;
+//      output = _.extend(output, {
+//        timedOut: true,
+//        isError: true,
+//        killedByContainer: true,
+//      });
+//      exec(stopCommand, (err, stdout, stderr) => {
+//
+//        resolve(trim(output));
+//      });
+//      resolve(trim(output));
+//    }, timeout);
+//    run.on("close", (exitCode) => {
+//      clearTimeout(timeoutCheck);
+//      output = _.extend(output, { isError: exitCode !== 0 });
+//      resolve(trim(output));
+//    });
+//  });
+//}
+//
 
 export function runTs(file: string, timeout: number, id: string) {
   console.log(file, timeout, id);
