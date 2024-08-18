@@ -4,7 +4,7 @@ const { exit } = require('process');
 const _ = require('lodash'); 
 const spawn = require('child_process').spawn
 
-const testcases = JSON.parse(readFileSync('test.json', 'utf8'))
+let testcases = JSON.parse(readFileSync('test.json', 'utf8'))
 
 const type = process.env.TYPE ; 
 
@@ -20,6 +20,7 @@ else if (_.isEqual(type , 'SUBMIT')){
 
 function execPython( timeout , testcase )  {
   return new Promise((resolve) => {
+    let good = true ; 
     const command = "python3";
     const args = [
       "code.py",
@@ -34,18 +35,21 @@ function execPython( timeout , testcase )  {
       response.stderr = "Time Limit Exceeded";
       response.code = 1
       response.result = null;
+      good = false; 
     }, timeout * 1000);
     pyChild.stdout.on("data", (data) => {
       response.stdout += data.toString();
-      if(response.stdout.length > 1000){
+      if(response.stdout.length > 10000){
         response.stderr = 'output limit exceeded' ; 
         pyChild.kill('SIGKILL'); 
+        good = false ;
       }
     });
     pyChild.stderr?.on("data", (data) => {
       response.stderr += data.toString();
       response.result = null;
-      response.code = 1 ; 
+      response.code = 1 ;
+      good = false ;
     });
     pyChild.on("error", (error) => {
       response.stderr += error.toString();
@@ -66,6 +70,7 @@ function execPython( timeout , testcase )  {
       x.pop();
       response.stdout = x.join("\n");
       response.stderr = response.stderr.replace(/File ".*?", /g , "code.py ");
+      response.good = good ; 
       resolve(response);
     });
   });
@@ -119,20 +124,21 @@ async function submitTestCases() {
     const results = [];
     
     for (const test of tests) {
-      // Execute the Python function and get the result
       let res = await execPython(testcases.timeout, JSON.stringify(test.input));
-      // Add the test ID to the result
       res.id = test.id;
+      if(_.isEqual(res.result , undefined) ){
+        res.result = null 
+      }
       results.push(res);
-      
-      // Introduce a pause of 500 milliseconds between executions
+      if(_.isEqual(res.good , false)){
+        break ; 
+      } 
       await sleep(20);
     }
     
-    // Log all results as JSON
     console.log(JSON.stringify(results));
   } catch (error) {
-    // Handle any errors that occurred during the execution
     console.error("Error running test cases:", error);
   }
 }
+

@@ -15,14 +15,14 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.post("/submit", async (req, res) => {
-  const { code, timeOut, language , functionName } = req.body;
+  const { code, timeOut, language , functionName ,argType} = req.body;
   const extension = fileExtension(language);
   const id = uuid();
   const file = `${id}${extension}`;
   const filePath = path.join("user_code", file);
 
   try {
-    writeFileSync(filePath, fromatGateway(language , code , functionName));
+    writeFileSync(filePath, fromatGateway(language , code , functionName , argType));
     let result :any=await submitGateway(language,file,timeOut,id); 
     //result = JSON.parse(result); 
     res.json(result); 
@@ -39,14 +39,14 @@ app.post("/submit", async (req, res) => {
 
 
 app.post("/run", async (req, res) => {
-  const { code, timeOut, language , functionName } = req.body;
+  const { code, timeOut, language , functionName, argType } = req.body;
   const extension = fileExtension(language);
   const id = uuid();
   const file = `${id}${extension}`;
   const filePath = path.join("user_code", file);
 
   try {
-    writeFileSync(filePath, fromatGateway(language , code , functionName));
+    writeFileSync(filePath, fromatGateway(language , code , functionName , argType));
     let result :any=await runGateway(language,file,timeOut,id); 
     //result = JSON.parse(result); 
     res.json(result); 

@@ -1,6 +1,6 @@
 import { spawn , exec } from "child_process";
 import _ from "underscore";
-import { runTypescript } from "./judge/typescript/main";
+import { runTypescript, submitTypescript } from "./judge/typescript/main";
 import { runPython, submitPython , } from "./judge/python/main";
 // export function runPython(file: string): Promise<Response> {
 //   return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ export async function submitGateway(language : string , file:string ,timeout: nu
     case "python":
       return submitPython(file  ,id );
     case "typescript" :
-      return runTypescript(file, timeout, id);
+      return submitTypescript(file, id);
     default:
       break;
   }
@@ -57,7 +57,7 @@ export async function runGateway(language : string , file:string ,timeout: numbe
     case "python":
       return runPython(file  , id );
     case "typescript" :
-      return runTypescript(file, timeout, id);
+      return runTypescript(file, id);
     default:
       break;
   }

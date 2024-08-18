@@ -45,7 +45,7 @@ function compile(){
 
 function execTypescript( timeout , testcase )  {
   return new Promise((resolve) => {
-    good = false; 
+    good = true; 
     //const compileRes = await compile()
     const command = "node";
     const args = [
@@ -61,18 +61,21 @@ function execTypescript( timeout , testcase )  {
       response.stderr = "Time Limit Exceeded";
       response.code = 1
       response.result = null;
+      good = false; 
     }, timeout * 1000);
     child.stdout.on("data", (data) => {
       response.stdout += data.toString();
       if(response.stdout.length > 10000){
         response.stderr = 'output limit exceeded' ; 
-        child.kill('SIGKILL'); 
+        child.kill('SIGKILL');
+        good = false ;
       }
     });
     child.stderr?.on("data", (data) => {
       response.stderr += data.toString();
       response.result = null;
-      response.code = 1 ; 
+      response.code = 1 ;
+      good = false ; 
     });
     child.on("error", (error) => {
       response.stderr += error.toString();
@@ -92,7 +95,9 @@ function execTypescript( timeout , testcase )  {
      
       x.pop();
       response.stdout = x.join("\n");
-      response.stderr = response.stderr.replace(/File ".*?", /g , "code.py ");
+      response.stderr = response.stderr.replace(/File ".*?", /g , "code.ts ");
+      
+      response.good = good; 
       resolve(response);
     });
   });
@@ -117,11 +122,11 @@ async function runTestCases() {
       console.log(JSON.stringify(gather));
     }
     else{
-      const res = {
+      const res = [{
         code : 1  , 
         stderr: compileRes.stdout + compileRes.stderr , 
         message: 'Compile Error'
-      }
+      }];
       console.log(JSON.stringify(res)); 
     }
 
@@ -144,24 +149,27 @@ async function submitTestCases() {
       for (const test of tests) {
         let res = await execTypescript(testcases.timeout, JSON.stringify(test.input));
         res.id = test.id;
-        if(_.isEqual(res.result , undefined)){
+        if(_.isEqual(res.result , undefined) ){
           res.result = null
+          
         }
         results.push(res);
-       
+        if ( _.isEqual(res.good , false)){
+          break ; 
+        } 
         await sleep(20);
       }
       
       console.log(JSON.stringify(results));
     }
     else{
-      console.log(JSON.stringify({
+      console.log(JSON.stringify([{
         code : 1 , 
         message : 'Compile Error'  ,
         stderr : compileRes.stderr + compileRes.stdout , 
         stdout : '' , 
         result : 'null',
-      }))
+      }]))
     } 
 
   } catch (error) {
@@ -169,4 +177,3 @@ async function submitTestCases() {
   }
 }
 
-submitTestCases();
