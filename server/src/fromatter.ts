@@ -16,7 +16,6 @@ export function formatTypescript(code :string , functionName : string , argType 
   let tsTemplate = `
 
 const args : any[]= JSON.parse(process.argv[2]);
-console.log(args)
 type ArgType = ${argType} ;
 const data = {
     'type' : 'result' ,
@@ -51,11 +50,56 @@ print(json.dumps(data))
 }
 
 
-let code = `function isPalindrome(n:number):boolean{
-  for(;;){
-    console.log('.' )
-  }   
-  return n.toString().split('').reverse().join('') === n.toString() 
-}`
+//{
+//  timeout :...  , 
+//  argType : ... , 
+//  tests : [
+//    {
+//      id : ... ,
+//      input: ... , 
+//      expected : ... , 
+//    }
+//  ]
+//}
+//{
+//  timeout : ... , 
+//  argType : ... , 
+//  tests : [
+//  {
+//    id ... , 
+//    input ... , 
+//  }
+//  ]
+//}
+//
 
-console.log(formatTypescript(code  , "isPalindrome" , '[number]'))
+interface Testcase{
+  id : number , 
+  input : any , 
+  expected: any 
+}
+
+interface Inputs {
+  timeout : number , 
+  argType : string , 
+  tests : Testcase[]
+}
+
+ 
+
+export function formatJSON(originalObject : Inputs):[string , Map<number , any>,  Map<number , any>]{
+  const transformedObject = {
+    timeout: originalObject.timeout,
+    argType: originalObject.argType,
+    tests: originalObject.tests.map(({ id, input }) => ({ id, input }))
+  };
+  const idOutput = new Map<number , any>(); 
+  const idInput = new Map<number , any>();
+  originalObject.tests.forEach((e:any) => {
+    idOutput.set(e.id , e.expected); 
+    idInput.set(e.id , e.input); 
+  });
+
+  return [JSON.stringify(transformedObject) , idOutput , idInput];
+}
+

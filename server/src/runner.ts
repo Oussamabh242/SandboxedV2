@@ -39,12 +39,12 @@ import { runPython, submitPython , } from "./judge/python/main";
 // }
 
 
-export async function submitGateway(language : string , file:string ,timeout: number , id : string ){
+export async function submitGateway(language : string , file:string ,timeout: number , id : string , testcasesFile : string , idOutput : Map<number , any> , idInput : Map<number , any>){
   switch (language) {
     case "python":
-      return submitPython(file  ,id );
+      return submitPython(file  ,id,testcasesFile , idOutput , idInput );
     case "typescript" :
-      return submitTypescript(file, id);
+      return submitTypescript(file, id , testcasesFile, idOutput , idInput);
     default:
       break;
   }
@@ -52,17 +52,16 @@ export async function submitGateway(language : string , file:string ,timeout: nu
 
 
 
-export async function runGateway(language : string , file:string ,timeout: number , id : string ){
+export async function runGateway(language : string , file:string ,timeout: number , id : string , testcasesFile : string , idOutput : Map<number , any> , idInput : Map<number , any>){
   switch (language) {
     case "python":
-      return runPython(file  , id );
+      return runPython(file  ,id,testcasesFile , idOutput , idInput );
     case "typescript" :
-      return runTypescript(file, id);
+      return runTypescript(file, id , testcasesFile, idOutput , idInput);
     default:
       break;
   }
 }
-
 
 
 //export function runPython(file: string , timeout : number , id:string){

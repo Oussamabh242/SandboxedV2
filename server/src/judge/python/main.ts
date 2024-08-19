@@ -41,17 +41,12 @@ interface SubmitResponse {
 		message?: string
 }
 
-const testcases = JSON.parse(readFileSync('./test.json' , 'utf8')).tests;
-const idInput = new Map<number, any>();
-const idOutput = new Map<number , any>();
 
 
-testcases.forEach((e:any) => {
-  idInput.set(e.id , e.input);
-  idOutput.set(e.id , e.expected); 
-});
 
-export function runPython(file : string  ,id :string) : Promise<PyResponse | string > {
+
+export function runPython(file : string , id :string , testcasesFile:string , idOutput:Map<number,any>, idInput: Map<number,any>  ) : Promise<PyResponse | string > {
+
   return new Promise((resolve) => {
     const command = "docker";
     const args = [
@@ -62,7 +57,7 @@ export function runPython(file : string  ,id :string) : Promise<PyResponse | str
       "-v",
       `./user_code/${file}:/app/code.py`,
       `-v` , 
-      `./test.json:/app/test.json` ,
+      `./user_code/${testcasesFile}:/app/test.json` ,
       `--name`,
       `${id}`,
       "pythonrunner", 
@@ -77,11 +72,16 @@ export function runPython(file : string  ,id :string) : Promise<PyResponse | str
     }) ;
     pyChild.on("exit", async (code) => {
       try{ 
-        console.log(response); 
         const sanitizedRespons = await  JSON.parse(response) 
         for(const resp of sanitizedRespons){
           resp.input = idInput.get(resp.id) ; 
-          resp.expected= idOutput.get(resp.id); 
+          resp.expected= idOutput.get(resp.id);
+          if(_.isEqual(resp.result , idOutput.get(resp.id))){
+            resp.message = 'Accepted'; 
+          }else{
+            resp.message = 'Wrong Answer'; 
+          }
+
         }
         resolve(sanitizedRespons)
       }
@@ -93,7 +93,7 @@ export function runPython(file : string  ,id :string) : Promise<PyResponse | str
 
   })}
 
-export function submitPython(file : string , id :string  ) : Promise<PyResponse | any > {
+export function submitPython(file : string , id :string , testcasesFile:string , idOutput:Map<number,any>, idInput: Map<number,any>  ) : Promise<PyResponse | any > {
   return new Promise((resolve) => {
     const command = "docker";
     const args = [
@@ -104,13 +104,12 @@ export function submitPython(file : string , id :string  ) : Promise<PyResponse 
       "-v",
       `./user_code/${file}:/app/code.py`,
       `-v` , 
-      `./test.json:/app/test.json` ,
+      `./user_code/${testcasesFile}:/app/test.json` ,
       `--name`,
       `${id}`,
       "pythonrunner", 
     ];
     let i = 0 ; 
-    let all :any = []; 
     let response :SubmitResponse = {passed:0};
     const pyChild = spawn(command, args);
     pyChild.stdout.on('data' , (data : any)=>{
@@ -118,10 +117,9 @@ export function submitPython(file : string , id :string  ) : Promise<PyResponse 
       res = JSON.parse(res) ;
       for(i  ; i<res.length ; i++){
         const thing = res[i]; 
-        console.log(thing)
         const expected = idOutput.get(thing.id) ; 
         if(!_.isEqual(thing.result , expected)){
-          resolve({...response ,...thing});
+          resolve({...response ,...thing,  input : idInput.get(thing.id)});
         }
         response.passed++; 
       }
