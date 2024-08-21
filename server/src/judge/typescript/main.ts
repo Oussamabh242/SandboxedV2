@@ -27,7 +27,7 @@ interface SubmitResponse {
 
 
 
-export function runTypescript(file : string , id :string,testcasesFile:string , idOutput:Map<number,any>, idInput: Map<number,any> ) : Promise<TsResponse | string > {
+export function runTypescript(file : string , id :string,testcasesFile:string , idOutput:Map<number,any>, idInput: Map<number,any> , order : number ) : Promise<TsResponse | string > {
 
   return new Promise((resolve) => {
     const command = "docker";
@@ -58,7 +58,14 @@ export function runTypescript(file : string , id :string,testcasesFile:string , 
         for(const resp of sanitizedRespons){
           resp.input = idInput.get(resp.id) ; 
           resp.expected= idOutput.get(resp.id); 
-          if(_.isEqual(resp.result , idOutput.get(resp.id))){
+          let okay ; 
+          if (order ===1){
+            okay = _.isEqual(resp.result , idOutput.get(resp.id));
+          }
+          else{
+            okay = _.isEqual(resp.result.sort() , idOutput.get(resp.id).sort())
+          }
+         if(okay){
             resp.message = 'Accepted'; 
           }else{
             resp.message = 'Wrong Answer'; 
@@ -74,7 +81,7 @@ export function runTypescript(file : string , id :string,testcasesFile:string , 
 
   })}
 
-export function submitTypescript(file : string , id :string,testcasesFile:string , idOutput:Map<number,any>, idInput: Map<number,any> ) : Promise<TsResponse | any > {
+export function submitTypescript(file : string , id :string,testcasesFile:string , idOutput:Map<number,any>, idInput: Map<number,any>, order:number ) : Promise<TsResponse | any > {
   return new Promise((resolve) => {
     const command = "docker";
     const args = [
@@ -99,8 +106,15 @@ export function submitTypescript(file : string , id :string,testcasesFile:string
       for(i  ; i<res.length ; i++){
         const thing = res[i]; 
         const expected = idOutput.get(thing.id) ; 
-        if(!_.isEqual(thing.result , expected)){
-          resolve({...response ,...thing, input : idInput.get(thing.id)});
+        let okay ;  
+        if (order===1){
+           okay = _.isEqual(thing.result , expected)
+        }  
+        else {
+          okay = _.isEqual(thing.result.sort() , expected.sort())
+        }
+        if(!okay){
+          resolve({...response ,...thing,  input : idInput.get(thing.id) , expected : idOutput.get(thing.id)});
         }
         response.passed++; 
       }

@@ -1,6 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { JSDocParsingMode } from "typescript";
-import { where } from "underscore";
 
 const prisma = new PrismaClient() ;
 
@@ -20,7 +18,7 @@ interface TestCase {
 }
 interface DbOutput{
   id : string , 
-  testCases : TestCase[] , 
+  tests : TestCase[] , 
   timeout : number , 
   order : number ,  
   functionName : string , 
@@ -43,39 +41,6 @@ export async function addProblem(input : DbInput){
 
 
 
-const thing:any = {
-  "id" : 'flaskdfja' , 
-  "functionName": "two_sum",
-  "argType": "[[int], int]",
-    "timeout": 2,
-    "testcases": [
-      {
-        "id": 1,
-        "input": [[2, 7, 11, 15], 9],
-        "expected": [0, 1]
-      },
-      {
-        "id": 2,
-        "input": [[3, 2, 4], 6],
-        "expected": [1, 2]
-      },
-      {
-        "id": 3,
-        "input": [[3, 3], 6],
-        "expected": [0, 1]
-      },
-      {
-        "id": 4,
-        "input": [[1, 2, 3, 4, 5], 9],
-        "expected": [3, 4]
-      },
-      {
-        "id": 5,
-        "input": [[2, 7, 11, 15], 18],
-        "expected": [1, 2]
-      }
-    ]
-  }
 
 export async function getProblem(id: string):Promise<DbOutput|null>{
   let problem = await prisma.problem.findUnique({
@@ -86,7 +51,7 @@ export async function getProblem(id: string):Promise<DbOutput|null>{
   let testCases = {}; 
   if (problem && problem.testCases){
     const testCases: TestCase[] = JSON.parse(problem.testCases) as TestCase[];
-    const enhanced: DbOutput = { ...problem, testCases };
+    const enhanced: DbOutput = { ...problem, tests:testCases };
     return enhanced;  
   }
   
@@ -94,5 +59,34 @@ export async function getProblem(id: string):Promise<DbOutput|null>{
   return null
 }
 
-//thing.testcases = JSON.stringify(thing.testcases);
+const thing:DbInput = {
+  testCases : JSON.stringify([
+  {
+    "id": 1,
+    "input": "abcabcbb",
+    "expected": 3
+  },
+  {
+    "id": 2,
+    "input": "bbbbb",
+    "expected": 1
+  },
+  {
+    "id": 3,
+    "input": "pwwkew",
+    "expected": 3
+  },
+  {
+    "id": 4,
+    "input": "aab",
+    "expected": 2
+  }
+]
+)  ,
+  id : 'whatever' , 
+  functionName : 'length_of_longest_substring',
+  argType : '[string]' , 
+  timeout : 3 , 
+  order  : 1 
+}
 

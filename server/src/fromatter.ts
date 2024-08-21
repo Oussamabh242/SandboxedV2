@@ -73,21 +73,22 @@ print(json.dumps(data))
 //}
 //
 
-interface Testcase{
-  id : number , 
+interface TestCase {
+  id : any , 
   input : any , 
-  expected: any 
+  output : any
 }
-
-interface Inputs {
+interface Inputs{
+  id : string , 
+  tests: TestCase[] , 
   timeout : number , 
-  argType : string , 
-  tests : Testcase[]
-}
-
- 
+  order : number ,  
+  functionName : string , 
+  argType: string
+} 
 
 export function formatJSON(originalObject : Inputs):[string , Map<number , any>,  Map<number , any>]{
+  console.log(originalObject)
   const transformedObject = {
     timeout: originalObject.timeout,
     argType: originalObject.argType,

@@ -18,7 +18,7 @@ args = json.loads(sys.argv[1])
 
 data = {
     'type' : 'result' ,
-    'content' : main([1,3,4,5,6,6,7,7] , 0),
+    'content' : main(*args),
 }
 
 print(json.dumps(data))
