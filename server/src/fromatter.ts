@@ -28,6 +28,8 @@ console.log(JSON.stringify(data)); `
   return code+tsTemplate ;
 
 }
+
+
 export function formatPython(code :string , funtionName :string ){
 
   let pythonTemplate = `
@@ -49,30 +51,6 @@ print(json.dumps(data))
   return formatted ; 
 }
 
-
-//{
-//  timeout :...  , 
-//  argType : ... , 
-//  tests : [
-//    {
-//      id : ... ,
-//      input: ... , 
-//      expected : ... , 
-//    }
-//  ]
-//}
-//{
-//  timeout : ... , 
-//  argType : ... , 
-//  tests : [
-//  {
-//    id ... , 
-//    input ... , 
-//  }
-//  ]
-//}
-//
-
 interface TestCase {
   id : any , 
   input : any , 
@@ -88,7 +66,6 @@ interface Inputs{
 } 
 
 export function formatJSON(originalObject : Inputs):[string , Map<number , any>,  Map<number , any>]{
-  console.log(originalObject)
   const transformedObject = {
     timeout: originalObject.timeout,
     argType: originalObject.argType,

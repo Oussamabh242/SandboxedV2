@@ -4,9 +4,12 @@ const { exit } = require('process');
 const _ = require('lodash'); 
 const spawn = require('child_process').spawn
 
-const testcases = JSON.parse(readFileSync('test.json', 'utf8'))
+
 
 const type = process.env.TYPE ; 
+const ID = process.env.ID ; 
+
+const testcases = JSON.parse(readFileSync(`./user_code/${ID}.json`, 'utf8'))
 
 if (_.isEqual(type , 'RUN')){
   runTestCases() ; 
@@ -24,7 +27,7 @@ function compile(){
     const command = "npx"; 
     const args = [
       "tsc",
-      "code.ts" 
+      `./user_code/${ID}.ts` 
     ] ;
     const child = spawn(command , args) ; 
     const response = {stdout : '' , stderr : '' }
@@ -50,7 +53,7 @@ function execTypescript( timeout , testcase )  {
     const command = "node";
     const args = [
       //"ts-node",
-      "code.js",
+      `./user_code/${ID}.js`,
       `${testcase}`   
     ];
     const child = spawn(command, args);
@@ -107,25 +110,27 @@ async function runTestCases() {
   try {
     const compileRes = await compile();
     if (_.isEqual(compileRes.code , 0)){
-      
-    
+      let results = []
+      let tests = testcases.tests
+       for (const test of tests) {
+        let res = await execTypescript(testcases.timeout, JSON.stringify(test.input));
+        res.id = test.id;
+        if(_.isEqual(res.result , undefined) ){
+          res.result = null
+          
+        }
+        results.push(res)
+        await sleep(20);
+      }
 
-      const promises = testcases.tests.map(elm => 
-        execTypescript(testcases.timeout, JSON.stringify(elm.input))
-      );
-
-      const results = await Promise.all(promises);
-
-
-      const gather = JSON.stringify(results);
-
-      console.log(JSON.stringify(gather));
+      console.log(JSON.stringify(results));
     }
     else{
       const res = [{
         code : 1  , 
         stderr: compileRes.stdout + compileRes.stderr , 
-        message: 'Compile Error'
+        message: 'Compile Error' , 
+        result : null 
       }];
       console.log(JSON.stringify(res)); 
     }

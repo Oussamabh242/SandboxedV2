@@ -1,9 +1,8 @@
-FROM node:20-alpine
-
-RUN apk add --no-cache python3 
+FROM python:3.11-alpine
 
 WORKDIR /app
 
 COPY . .
 
-CMD ["node", "main.js"]
+
+CMD ["python3" , "main.py"]

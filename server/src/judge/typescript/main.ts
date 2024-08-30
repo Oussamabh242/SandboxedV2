@@ -1,9 +1,5 @@
 import { spawn } from "child_process";
-import { readFileSync } from "fs";
-import test from "node:test";
 const  _ = require('lodash');
-import { cwd } from "process";
-import { isEqual } from "underscore";
 
 interface TsResponse {
   stdout: string;
@@ -34,16 +30,17 @@ export function runTypescript(file : string , id :string,testcasesFile:string , 
     const args = [
       "run",
       '-e' ,
-      `TYPE=SUBMIT`,
+      `TYPE=RUN`,
+      `-e` , 
+      `ID=${id}`,
       "--rm",
       "-v",
-      `./user_code/${file}:/app/code.ts`,
-      `-v` , 
-      `./user_code/${testcasesFile}:/app/test.json` ,
+      `user_code_volume:/app/user_code`,
       `--name`,
       `${id}`,
-      "tsrunner", 
+      "tsrun", 
     ];
+
     let response = '';
     const pyChild = spawn(command, args);
     pyChild.stdout.on('data' , (data : any)=>{
@@ -54,7 +51,9 @@ export function runTypescript(file : string , id :string,testcasesFile:string , 
     }) ;
     pyChild.on("exit", async (code) => {
       try{ 
-        const sanitizedRespons = await  JSON.parse(response) 
+        let sanitizedRespons = await  JSON.parse(response)
+        console.log(sanitizedRespons , typeof(sanitizedRespons))
+
         for(const resp of sanitizedRespons){
           resp.input = idInput.get(resp.id) ; 
           resp.expected= idOutput.get(resp.id); 
@@ -63,6 +62,7 @@ export function runTypescript(file : string , id :string,testcasesFile:string , 
             okay = _.isEqual(resp.result , idOutput.get(resp.id));
           }
           else{
+            console.log(resp.result , resp)
             okay = _.isEqual(resp.result.sort() , idOutput.get(resp.id).sort())
           }
          if(okay){
@@ -87,27 +87,33 @@ export function submitTypescript(file : string , id :string,testcasesFile:string
     const args = [
       "run",
       '-e' ,
-      `TYPE=SUBMIT`, 
-       "--rm",
+      `TYPE=SUBMIT`,
+      `-e` , 
+      `ID=${id}`,
+      "--rm",
       "-v",
-      `./user_code/${file}:/app/code.ts`,
-      `-v` , 
-      `./user_code/${testcasesFile}:/app/test.json` ,
+      `user_code_volume:/app/user_code`,
       `--name`,
       `${id}`,
-      "tsrunner", 
+      "tsrun", 
     ];
+    console.log(command , args.join(" "))
     let i = 0 ; 
     let response :SubmitResponse = {passed:0};
     const pyChild = spawn(command, args);
     pyChild.stdout.on('data' , (data : any)=>{
       let res = data.toString() ;
       res = JSON.parse(res) ;
-      for(i  ; i<res.length ; i++){
+      if (_.isEqual(res[0].message ,"Compile Error")){
+        console.log('Compile err')  
+          response={...res[0] , passed : 0};
+      } 
+      else {
+        for(i  ; i<res.length ; i++){
         const thing = res[i]; 
         const expected = idOutput.get(thing.id) ; 
         let okay ;  
-        if (order===1){
+        if (order===1  || _.isEqual(thing.result,null)){
            okay = _.isEqual(thing.result , expected)
         }  
         else {
@@ -119,11 +125,13 @@ export function submitTypescript(file : string , id :string,testcasesFile:string
         response.passed++; 
       }
 
+      }
+      
 
          }) ;
     pyChild.on("exit", async (code) => {
 
-      resolve(response)  
+      resolve({...response , message : "Accepted"})  
     }) ; 
 
   })}    

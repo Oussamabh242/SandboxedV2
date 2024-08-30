@@ -14,4 +14,3 @@ export function fileExtension(language :string):string{
     
 }
 
-console.log(fileExtension("typescript"));

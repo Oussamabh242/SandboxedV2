@@ -1,9 +1,5 @@
 import { spawn } from "child_process";
-import { readFileSync } from "fs";
-import test from "node:test";
 const  _ = require('lodash');
-import { cwd } from "process";
-import { isEqual } from "underscore";
 
 interface PyResponse {
   stdout: string;
@@ -52,17 +48,31 @@ export function runPython(file : string , id :string , testcasesFile:string , id
     const args = [
       "run",
       '-e' ,
-      `TYPE=SUBMIT`,
+      `TYPE=RUN`,
+      `-e` , 
+      `ID=${id}`,
       "--rm",
       "-v",
-      `./user_code/${file}:/app/code.py`,
-      `-v` , 
-      `./user_code/${testcasesFile}:/app/test.json` ,
+      `user_code_volume:/app/user_code`,
       `--name`,
       `${id}`,
-      "pythonrunner", 
+      "pyrun", 
     ];
+    /*const args = [
+      "run",
+      '-e' ,
+      `TYPE=RUN`, 
+       "--rm",
+      "-v",
+      `/app/server/user_code/${file}:/app/code.py`,
+      `-v` , 
+      `/app/server/user_code/${testcasesFile}:/app/test.json` ,
+      `--name`,
+      `${id}`,
+      "pyrunner", 
+    ]*/
     let response = '';
+
     const pyChild = spawn(command, args);
     pyChild.stdout.on('data' , (data : any)=>{
       response+= data.toString() ;
@@ -70,23 +80,36 @@ export function runPython(file : string , id :string , testcasesFile:string , id
     pyChild.stderr?.on('data' , (data : any)=>{
       console.error(data.toString()) ; 
     }) ;
+    pyChild.on('error' , (err:any)=>{
+      console.log('error')
+    })
     pyChild.on("exit", async (code) => {
       try{ 
-        const sanitizedRespons = await  JSON.parse(response) 
+       let sanitizedRespons = await  JSON.parse(response); 
         for(const resp of sanitizedRespons){
           resp.input = idInput.get(resp.id) ; 
           resp.expected= idOutput.get(resp.id);
-          let okay ; 
-          if (order ===1){
-            okay = _.isEqual(resp.result , idOutput.get(resp.id));
+          if(_.isEqual(resp.good , false)){
+            resp.message = "error"; 
+            console.log('here'); 
           }
           else{
-            okay = _.isEqual(resp.result.sort() , idOutput.get(resp.id).sort())
-          }
-         if(okay){
-            resp.message = 'Accepted'; 
-          }else{
-            resp.message = 'Wrong Answer'; 
+          
+            let okay ; 
+            if (order ===1){
+              okay = _.isEqual(resp.result , idOutput.get(resp.id));
+            }
+            else if(typeof resp.result != typeof idOutput.get(resp.id)){
+              okay = false;
+            }
+            else{
+              okay = _.isEqual(resp.result.sort() , idOutput.get(resp.id).sort())
+            }
+            if(okay){
+              resp.message = 'Accepted'; 
+            }else{
+              resp.message = 'Wrong Answer'; 
+            }
           }
         }
         resolve(sanitizedRespons)
@@ -106,92 +129,56 @@ export function submitPython(file : string , id :string , testcasesFile:string ,
       "run",
       '-e' ,
       `TYPE=SUBMIT`,
+      `-e` , 
+      `ID=${id}`,
       "--rm",
       "-v",
-      `./user_code/${file}:/app/code.py`,
-      `-v` , 
-      `./user_code/${testcasesFile}:/app/test.json` ,
+      `user_code_volume:/app/user_code`,
       `--name`,
       `${id}`,
-      "pythonrunner", 
+      "pyrun", 
     ];
     let i = 0 ; 
     let response :SubmitResponse = {passed:0};
     const pyChild = spawn(command, args);
-    pyChild.stdout.on('data' , (data : any)=>{
-      let res = data.toString() ;
-      res = JSON.parse(res) ;
-      for(i  ; i<res.length ; i++){
-        const thing = res[i]; 
-        const expected = idOutput.get(thing.id) ; 
-        let okay ;  
-        if (order===1){
-           okay = _.isEqual(thing.result , expected)
-        }  
-        else {
-          okay = _.isEqual(thing.result.sort() , expected.sort())
-        }
-        if(!okay){
-          resolve({...response ,...thing,  input : idInput.get(thing.id) , expected : idOutput.get(thing.id)});
-        }
-        response.passed++; 
-      }
-
-
-      //  all.push(data.toString('utf8'))
-      //let res :any ; 
-      //   res = data.toString() ;
-      //  res = res.split('\n');
-      //for(let j = 0 ; j<res.length ; j++){
-      //
-      //  let part = res[j].trim();
-      //
-      //  if(part.length==0){
-      //    continue ;
-      //  } 
-      //  part = JSON.parse(part);
-      //  console.log(part); 
-      //  const expected = idOutput.get(part.id); 
-      //  console.log(part.id , expected, part.result);
-      //  if(_.isEqual(part.result , expected)){
-      //    response.passed++ ;
-      //
-      //  }
-      //  else {
-      //
-      //    response = {...response , ...part , expected : expected , code : 1  , input : idInput.get(res.id)};
-      //
-      //    resolve(response);  
-      //  }
-      //
-      //  i++ ;
-      //}
-           
-        //all.push(res);
-    //    const expected = idOutput.get(res["id"]); 
-    //    //console.log(expected);
-    //    if(_.isEqual(res.result , expected)){
-    //      response.passed++ ;
-    //
-    //    }
-    //    else {
-    //
-    //      response = {...response , ...res , expected : expected , code : 1  , input : idInput.get(res.id)};
-    //
-    //      resolve(response);  
-    //    }
-    //
-    //    i++ ;
-    //
-    //}) ; 
-    //pyChild.stderr?.on('data' , (data : any)=>{
-    //  console.error(data.toString()) ; 
+    let res :any ; 
+    pyChild.stdout.on('data' , async (data : any)=>{
+      res = data.toString() ;
     }) ;
+
     pyChild.on("exit", async (code) => {
-      // console.log(all); 
-      //all.forEach(elm=> {
-      //  if(_.isEqual(elm.result , )) 
-      //});
+      let resp:any[] = await JSON.parse(res) ;
+      console.log(resp)
+      for(i  ; i<resp.length ; i++){
+        const thing:any = resp[i]; 
+        console.log(thing.id , typeof thing); 
+        const expected = idOutput.get(thing.id) ; 
+        let okay  ;
+        let good = thing.good ; 
+        if(_.isEqual(good , false)){
+          response = {...response ,...thing,  input : idInput.get(thing.id),  expected : idOutput.get(thing.id)};
+          if(!response.message)response.message= "Error" ;
+          break ;
+        }
+        else{
+          if (order===1){
+            okay = _.isEqual(thing.result , expected)
+          } 
+          else if (typeof thing.result != typeof expected){
+            okay = false ; 
+          }
+          else {
+            okay = _.isEqual(thing.result.sort() , expected.sort())
+          }
+          if(!okay){
+            response = {...response ,...thing,  input : idInput.get(thing.id) , message : "wrong answer" , expected : idOutput.get(thing.id)};
+            break ; 
+          }
+             
+          response.passed++; 
+          } 
+        }
+      if(!response.message)response.message='Accepted';
       resolve(response)  
     }) ; 
 
@@ -200,54 +187,4 @@ export function submitPython(file : string , id :string , testcasesFile:string ,
 
 
 
-//export function execPython(file : string , timeout : number ,id :string ,  input :any) : Promise<PyResponse> {
-//  return new Promise((resolve) => {
-//    const command = "docker";
-//    const args = [
-//      "run",
-//      "--rm",
-//      "-v",
-//      `./user_code/${file}:/app/code.py`,
-//      `--name`,
-//      `${id}`,
-//      "snadpy", 
-//    ];
-//    const pyChild = spawn(command, args);
-//    const response: PyResponse = { stdout: "", stderr: "", message: "" , code : 0 };
-//    const timer = setTimeout(() => {
-//      pyChild.kill("SIGKILL");
-//      response.message = "Time Limit Exceeded";
-//      response.stderr = "Time Limit Exceeded";
-//      response.code = 1
-//      response.result = null;
-//    }, timeout * 1000);
-//    pyChild.stdout?.on("data", (data: any) => {
-//      response.stdout += data.toString();
-//    });
-//    pyChild.stderr?.on("data", (data) => {
-//      response.stderr += data.toString();
-//      response.result = null;
-//      response.code = 1 ; 
-//    });
-//    pyChild.on("error", (error) => {
-//      response.stderr += error.toString();
-//      response.code = 1
-//      response.result = null;
-//    });
-//    pyChild.on("exit", (code) => {
-//      clearTimeout(timer);
-//      const x = response.stdout.split("\n").filter((item) => item.trim());
-//      try {
-//        const res = x[x.length - 1];
-//        let y = JSON.stringify(res);
-//        response.result = JSON.parse(JSON.parse(y)).content;
-//      } catch {
-//        response.result = null;
-//      }
-//      x.pop();
-//      //response.stdout = trimOutput(x.join("\n"));
-//      response.stderr = response.stderr.replace(/File ".*?", /g , "code.py ");
-//      resolve(response);
-//    });
-//  });
-//}
+

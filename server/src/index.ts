@@ -39,6 +39,7 @@ app.post("/submit", async (req, res) => {
   try {
     const problem = await getProblem(problemId); 
     if(problem){
+      console.log(problem)
       const [inCode , idOutput ,idInput] = formatJSON(problem) 
       await writeFile(filePath, fromatGateway(language , code , problem.functionName , problem.argType));
       await writeFile(path.join('user_code' , jsonFile) , inCode) ;
@@ -55,12 +56,12 @@ app.post("/submit", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
     
   }
-  finally{
-    if (existsSync(filePath) && existsSync(path.join('user_code' , jsonFile))){
-      await unlink(filePath); 
-      await unlink(path.join('user_code' , jsonFile));
-    }
-  }   
+  //finally{
+  //  if (existsSync(filePath) && existsSync(path.join('user_code' , jsonFile))){
+  //    await unlink(filePath); 
+  //    await unlink(path.join('user_code' , jsonFile));
+  //  }
+  //}   
 
 
 });
@@ -75,7 +76,6 @@ app.post("/run", async (req, res) => {
   const jsonFile = `${id}.json`;
   try {
     const problem = await getProblem(problemId); 
-    console.log(problem); 
     
     if(problem){
 
@@ -112,12 +112,16 @@ interface DbInput{
   functionName : string , 
   argType: string
 }
+  //id : string , 
+  //testCases : string , 
+  //timeout : number , 
+  //order : number ,  
+  //functionName : string , 
+  //argType: string
 
 app.post('/problem' , async (req :Request<{},{},DbInput>  , res)=>{
   try {
-    console.log(req.body); 
     const problem = await addProblem(req.body); 
-    console.log(problem);  
     return res.status(201).send(problem); 
  }
  catch(err){
@@ -127,7 +131,7 @@ app.post('/problem' , async (req :Request<{},{},DbInput>  , res)=>{
 
 })
 
-app.listen(3002, () => {
-  console.log("Listening on port 3002 ...");
+app.listen(3000, () => {
+  console.log("Listening on port 3000 ...");
 });
 
