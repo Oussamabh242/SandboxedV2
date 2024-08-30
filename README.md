@@ -59,7 +59,6 @@ This repository provides a Docker-based environment to run and test user-submitt
 ## API Endpoints
 
 The container has three endpoints:
-Note that three problems are there out of the box : Palindrome number , combination sum , island perimiter .
 
 ### 1. POST /problem
 
