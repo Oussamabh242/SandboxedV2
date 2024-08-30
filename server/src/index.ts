@@ -11,6 +11,7 @@ import { formatJSON } from "./fromatter";
 import Bottleneck from "bottleneck";
 import { getProblem , addProblem } from "./utils/_db";
 import { existsSync } from "fs";
+import { rearg } from "lodash";
 
 const limiter = new Bottleneck({
   maxConcurrent: 1,
@@ -106,7 +107,7 @@ app.post("/run", async (req, res) => {
 });
 interface DbInput{
   id : string , 
-  testCases : string , 
+  testCases : any , 
   timeout : number , 
   order : number ,  
   functionName : string , 
@@ -121,6 +122,7 @@ interface DbInput{
 
 app.post('/problem' , async (req :Request<{},{},DbInput>  , res)=>{
   try {
+    req.body.testCases = JSON.stringify(req.body.testCases) ;
     const problem = await addProblem(req.body); 
     return res.status(201).send(problem); 
  }
