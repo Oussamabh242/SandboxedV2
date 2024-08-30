@@ -9,7 +9,7 @@ import { unlink , writeFile } from "fs/promises";
 import {  fromatGateway } from "./fromatter";
 import { formatJSON } from "./fromatter";
 import Bottleneck from "bottleneck";
-import { getProblem , addProblem } from "./utils/_db";
+import { getProblem , addProblem, allProblems } from "./utils/_db";
 import { existsSync } from "fs";
 import { rearg } from "lodash";
 
@@ -132,7 +132,23 @@ app.post('/problem' , async (req :Request<{},{},DbInput>  , res)=>{
   }
 
 })
+app.get('/problem' , async (req :Request<{},{},DbInput>  , res)=>{
+  try {
+    const problems = await allProblems();
+    if (problems){
 
+      return res.status(200).send(problems); 
+    }
+    return res.status(404).json({
+      "error" : "no problems found"
+    }); 
+ }
+ catch(err){
+    console.log(err); 
+    return res.send({'error':'something wrong happend'})
+  }
+
+})
 app.listen(3000, () => {
   console.log("Listening on port 3000 ...");
 });

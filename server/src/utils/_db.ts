@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { functions } from "lodash";
 
 const prisma = new PrismaClient() ;
 
@@ -53,40 +54,15 @@ export async function getProblem(id: string):Promise<DbOutput|null>{
     const testCases: TestCase[] = JSON.parse(problem.testCases) as TestCase[];
     const enhanced: DbOutput = { ...problem, tests:testCases };
     return enhanced;  
-  }
-  
- 
+  } 
   return null
 }
 
-const thing:DbInput = {
-  testCases : JSON.stringify([
-  {
-    "id": 1,
-    "input": "abcabcbb",
-    "expected": 3
-  },
-  {
-    "id": 2,
-    "input": "bbbbb",
-    "expected": 1
-  },
-  {
-    "id": 3,
-    "input": "pwwkew",
-    "expected": 3
-  },
-  {
-    "id": 4,
-    "input": "aab",
-    "expected": 2
+export async function allProblems(){
+  const problems = await prisma.problem.findMany();
+  if(problems){
+    return problems; 
   }
-]
-)  ,
-  id : 'whatever' , 
-  functionName : 'length_of_longest_substring',
-  argType : '[string]' , 
-  timeout : 3 , 
-  order  : 1 
+  return null;  
 }
 
