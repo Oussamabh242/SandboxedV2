@@ -12,21 +12,6 @@ interface PyResponse {
 
 }
 
-interface Response {
-	result : any | null; 
-	stdout : string
-	message? : string
-	stderr: string;
-    expected? : any ;
-    input : any ;
-    output : any
-}
-
-interface Testcase {
-    input : any[]
-    output : any
-}
-
 interface SubmitResponse {
 		passed : number 
 		input? : any 

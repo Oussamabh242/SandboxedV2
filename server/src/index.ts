@@ -44,12 +44,12 @@ app.post("/submit", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
     
   }
-  //finally{
-  //  if (existsSync(filePath) && existsSync(path.join('user_code' , jsonFile))){
-  //    await unlink(filePath); 
-  //    await unlink(path.join('user_code' , jsonFile));
-  //  }
-  //}   
+  finally{
+    if (existsSync(filePath) && existsSync(path.join('user_code' , jsonFile))){
+      await unlink(filePath); 
+      await unlink(path.join('user_code' , jsonFile));
+    }
+  }   
 
 
 });

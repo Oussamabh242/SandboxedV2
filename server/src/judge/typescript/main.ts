@@ -98,18 +98,16 @@ export function submitTypescript(file : string , id :string,testcasesFile:string
       "tsrun", 
     ];
     console.log(command , args.join(" "))
-    let i = 0 ; 
     let response :SubmitResponse = {passed:0};
     const pyChild = spawn(command, args);
     pyChild.stdout.on('data' , (data : any)=>{
       let res = data.toString() ;
       res = JSON.parse(res) ;
       if (_.isEqual(res[0].message ,"Compile Error")){
-        console.log('Compile err')  
-          response={...res[0] , passed : 0};
+          response={...res[0] , passed : 0 , message:"Compile Error"};
       } 
       else {
-        for(i  ; i<res.length ; i++){
+        for(let i = 0  ; i<res.length ; i++){
         const thing = res[i]; 
         const expected = idOutput.get(thing.id) ; 
         let okay ;  
@@ -120,18 +118,19 @@ export function submitTypescript(file : string , id :string,testcasesFile:string
           okay = _.isEqual(thing.result.sort() , expected.sort())
         }
         if(!okay){
-          resolve({...response ,...thing,  input : idInput.get(thing.id) , expected : idOutput.get(thing.id)});
+          response= {...response ,...thing,  input : idInput.get(thing.id) , expected : idOutput.get(thing.id) , message : "Wrong Answer"};
+          break ; 
         }
         response.passed++; 
       }
 
-      }
+    }
       
 
          }) ;
     pyChild.on("exit", async (code) => {
-
-      resolve({...response , message : "Accepted"})  
+      if(!response.message)response.message = "Accepted"  ;
+      resolve({...response })  
     }) ; 
 
   })}    
