@@ -8,28 +8,15 @@ import {  runGateway, submitGateway } from "./runner";
 import { unlink , writeFile } from "fs/promises";
 import {  fromatGateway } from "./fromatter";
 import { formatJSON } from "./fromatter";
-import Bottleneck from "bottleneck";
 import { getProblem , addProblem, allProblems } from "./utils/_db";
 import { existsSync } from "fs";
-import { rearg } from "lodash";
 
-const limiter = new Bottleneck({
-  maxConcurrent: 1,
-  minTime: 1000
-});
+
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(cors());
-app.use((req, res, next) => {
-  limiter.schedule(() => {
-    return new Promise((resolve) => {
-      next();
-      resolve(0);
-    });
-  });
-});
 app.post("/submit", async (req, res) => {
   const { code,  language , problemId} = req.body;
   const extension = fileExtension(language);
@@ -122,7 +109,7 @@ interface DbInput{
 
 app.post('/problem' , async (req :Request<{},{},DbInput>  , res)=>{
   try {
-    req.body.testCases = JSON.stringify(req.body.testCases) ;
+    req.body.testCases = await JSON.stringify(req.body.testCases) ;
     const problem = await addProblem(req.body); 
     return res.status(201).send(problem); 
  }

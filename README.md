@@ -21,7 +21,7 @@ This repository provides a Docker-based environment to run and test user-submitt
 3. Build the main contain:
    
 ```bash
-   docker build -t sandboxed .
+   docker build -t sandboxed ./server
 ```
 
 ### Building the Code Execution Containers

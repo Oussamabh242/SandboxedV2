@@ -1,4 +1,3 @@
-import _ from "underscore";
 import { runTypescript, submitTypescript } from "./judge/typescript/main";
 import { runPython, submitPython , } from "./judge/python/main";
 
