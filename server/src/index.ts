@@ -32,7 +32,6 @@ app.post("/submit", async (req, res) => {
       await writeFile(filePath, fromatGateway(language , code , problem.functionName , problem.argType));
       await writeFile(path.join('user_code' , jsonFile) , inCode) ;
       let result :any=await submitGateway(language,file,id , jsonFile ,idOutput, idInput,problem.order); 
-      //result = JSON.parse(result); 
       res.json(result); 
     }  
     else{
@@ -67,12 +66,11 @@ app.post("/run", async (req, res) => {
     
     if(problem){
 
-      //problem.tests = problem.tests.slice(0, 2); 
+      problem.tests = problem.tests.slice(0, 3); 
       const [inCode , idOutput ,idInput] = formatJSON(problem) ;
       await writeFile(filePath, fromatGateway(language , code , problem.functionName , problem.argType));
       await writeFile(path.join('user_code' , jsonFile) , inCode) ;
       let result :any=await runGateway(language,file,id , jsonFile ,idOutput, idInput , problem.order); 
-      //result = JSON.parse(result); 
       res.json(result); 
     }
     else{

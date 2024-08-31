@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { functions } from "lodash";
 
 const prisma = new PrismaClient() ;
 
@@ -49,7 +48,6 @@ export async function getProblem(id: string):Promise<DbOutput|null>{
       id : id ,
     }
   });
-  let testCases = {}; 
   if (problem && problem.testCases){
     const testCases: TestCase[] = JSON.parse(problem.testCases) as TestCase[];
     const enhanced: DbOutput = { ...problem, tests:testCases };

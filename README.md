@@ -2,7 +2,7 @@
 
 # Introduction
 
-This repository provides a Docker-based environment to run and test user-submitted code against predefined problems. It supports multiple programming languages using isolated containers.
+This repository provides a Docker-based environment to run and test user-submitted code against predefined problems. It supports Python and TypeScript languages using isolated containers.
 
 ## How to Run
 
